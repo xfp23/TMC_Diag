@@ -1,0 +1,36 @@
+import { Button, VerticalBox, HorizontalBox } from "std-widgets.slint";
+
+export component AppWindow inherits Window {
+    // 1. 定义数据槽位：是否在线
+    in property <bool> is-online: false;
+    in property <int> device-count : 0;
+
+    callback  add_device();
+    
+    // 2. 定义动作槽位：当点击刷新按钮时
+    callback request-refresh();
+
+    title: "USB设备管理器";
+    min-width: 300px;
+
+    VerticalBox {
+        alignment: center;
+        spacing: 20px;
+
+        // 状态显示区域
+        HorizontalBox {
+            alignment: center;
+            Text {
+                text: root.is-online ? "设备已连接" : "设备未找到";
+                color: root.is-online ? green : red;
+                font-size: 24px;
+            }
+        }
+
+        // 按钮调用回调
+        Button {
+            text: "检查设备状态";
+            clicked => { root.request-refresh() }
+        }
+    }
+}
