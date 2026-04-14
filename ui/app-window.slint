@@ -41,7 +41,7 @@ export component AppWindow inherits Window {
             Row {
                 VerticalBox { 
                     padding: 0; Text { text: "设备型号:"; }
-                    ComboBox { model: ["USBCANFD-100U", "USBCANFD-200U"]; current-index: 0; }
+                    ComboBox { model: ["USBCANFD-100U", "USBCANFD-200U", "USBCAN-2E-U"]; current-index: 0; }
                 }
                 VerticalBox { 
                     padding: 0; Text { text: "CAN通道:"; }
@@ -55,7 +55,7 @@ export component AppWindow inherits Window {
                 }
                 VerticalBox { 
                     padding: 0; alignment: center;
-                    CheckBox { text: "启用 120Ω"; checked: true; }
+                    CheckBox { text: "启用 120Ω"; checked: false; }
                 }
             }
         }
