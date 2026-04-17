@@ -64,6 +64,7 @@ void SlintWindow::BtnClick_ConnectDevice()
         this->ui_->set_OpenDevError(true);
         return;
     }
+    
     int ch = ui_->get_selected_can_channel();
     int baud = ui_->get_selected_can_baud();
     if (usb_can->OpenChannel((UsbCan2EU::Channel_t)ch, (UsbCan2EU::BaudRate_t)baud) != UsbCan2EU::Status_t::OK)
