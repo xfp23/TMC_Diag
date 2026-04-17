@@ -3,6 +3,7 @@
 #include <iostream>
 #include <thread>
 #include "zlgcan.h"
+#include <functional>
 
 class UsbCan2EU
 {
@@ -36,15 +37,16 @@ public:
         uint64_t timestamp;
     }CanDataInfo_t;
     typedef struct {
-        CanDataInfo_t *info;
+        std::vector<CanDataInfo_t> info;
         uint32_t recv_num;
     }ChannelCanData_t;
 
-    typedef void(*Callback_Func_t)(ChannelCanData_t CanData);
+    using Callback_Func_t = std::function<void(UsbCan2EU::ChannelCanData_t)>;
+    // typedef void(*Recv_Func_t)(ChannelCanData_t CanData);
 private:
     const char *baud_str[2] = {"250000","500000"}; // 与枚举值对应，做索引访问
     static constexpr BYTE chn_max = 2;
-    std::thread thd_busload;         // 总线利用率线程
+    // std::thread thd_busload;         // 总线利用率线程
     std::thread thd_handle[chn_max]; // 接收线程
     CHANNEL_HANDLE chn[chn_max] = {};
     DEVICE_HANDLE dev_handle = nullptr;

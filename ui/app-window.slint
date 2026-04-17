@@ -8,8 +8,14 @@ export component AppWindow inherits Window {
     icon: @image-url("favicon.ico");
 
     // --- 数据模型 (WPF 的 DataContext/Binding) ---
+    in-out property <int> diag-status: 0;
     in property <string> test-status: "等待测试";
-    in property <color> status-color: #808080;
+    property <color> status-color: 
+        diag-status == 1 ? #FFA500 : // 橙黄色 (Orange)
+        diag-status == 2 ? #00FF00 : // 绿色 (Green)
+        diag-status == 3 ? #FF0000 : // 红色 (Red)
+        #808080;                     // 默认灰色 (Gray)
+
     // in property <bool> is-connected: false;
     in property <bool> OpenDevBtnEnable: true;
     in property <bool> CloseDevBtnEnable: false;
@@ -19,9 +25,29 @@ export component AppWindow inherits Window {
     // in property <bool> : false;
     in-out property <bool> OpenDevError: false;
     // 步骤指示灯颜色 (Gray, Green, Red 等)
-    in property <color> step1-color: gray;
-    in property <color> step2-color: gray;
-    in property <color> step3-color: gray;
+
+    in-out property <int> step-one-status :0;
+    in-out property <int> step-two-status :0;
+    in-out property <int> step-three-status :0;
+    in-out property <int> step-four-status :0;
+
+     property <color> step1-color:
+        step-one-status == 1 ? #00FF00 : // 绿色 (Green)
+        step-one-status == 2 ? #FF0000 : // 红色 (Red)
+        #808080;                     // 默认灰色 (Gray)
+     property <color> step2-color:
+            step-two-status == 1 ? #00FF00 : // 绿色 (Green)
+        step-two-status == 2 ? #FF0000 : // 红色 (Red)
+        #808080;                     // 默认灰色 (Gray);
+     property <color> step3-color: 
+                 step-three-status == 1 ? #00FF00 : // 绿色 (Green)
+        step-three-status == 2 ? #FF0000 : // 红色 (Red)
+        #808080;                     // 默认灰色 (Gray);;
+
+     property <color> step4-color: 
+                 step-four-status == 1 ? #00FF00 : // 绿色 (Green)
+        step-four-status == 2 ? #FF0000 : // 红色 (Red)
+        #808080;                     // 默认灰色 (Gray);;
 
     in-out property <int> selected-can-channel: 0;
     in-out property <int> selected-can-baud: 0;
@@ -50,17 +76,17 @@ export component AppWindow inherits Window {
             Row {
                 VerticalBox { 
                     padding: 0; Text { text: "设备型号:"; }
-                    ComboBox { model: ["USBCANFD-100U", "USBCANFD-200U", "USBCAN-2E-U"]; current-index: 0; }
+                    ComboBox { model: [/*"USBCANFD-100U", "USBCANFD-200U", */"USBCAN-2E-U"]; current-index: 0; }
                 }
                 VerticalBox { 
                     padding: 0; Text { text: "CAN通道:"; }
-                    ComboBox { model: ["通道 1", "通道 2"]; current-index: 0; }
+                    ComboBox { model: ["通道 1", "通道 2"]; current-index <=> root.selected-can-channel; }
                 }
             }
             Row {
                 VerticalBox { 
                     padding: 0; Text { text: "仲裁波特率:"; }
-                    ComboBox { model: ["500K", "250K"]; current-index <=> root.selected-can-channel;}
+                    ComboBox { model: ["500K", "250K"]; current-index <=> root.selected-can-baud;}
                 }
                 VerticalBox { 
                     padding: 0; alignment: center;

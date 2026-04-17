@@ -43,6 +43,7 @@ add_executable(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Slint::Slint
     USBCAN_2E_U
+    FileLog
 )
 
 slint_target_sources(${PROJECT_NAME} ui/app-window.slint)

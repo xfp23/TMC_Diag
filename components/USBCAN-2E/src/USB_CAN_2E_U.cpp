@@ -49,6 +49,8 @@ UsbCan2EU::Status_t UsbCan2EU::CloseDev()
     {
         return Status_t::ERR;
     }
+
+    return Status_t::OK;
 }
 
 UsbCan2EU::Status_t UsbCan2EU::OpenChannel(Channel_t channel,BaudRate_t baud)
@@ -101,7 +103,7 @@ void UsbCan2EU::thread_task(CHANNEL_HANDLE chn, int chn_idx)
                 
                 ChannelCanData_t localData; 
                 localData.recv_num = ReceiveNum;
-                localData.info = new CanDataInfo_t[ReceiveNum]; // 局部分配
+                localData.info.resize(ReceiveNum);
 
                 for (uint32_t i = 0; i < ReceiveNum; i++) {
                     localData.info[i].ch = (Channel_t)chn_idx;
@@ -110,14 +112,15 @@ void UsbCan2EU::thread_task(CHANNEL_HANDLE chn, int chn_idx)
                     memcpy(localData.info[i].data, canData[i].frame.data, 8);
                 }
 
-                
+                if(this->recv_callback != nullptr)
+                {
                 this->recv_callback(localData);
+                }
 
-                
-                delete[] localData.info;
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+    if (num == 0)
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
 }
 
@@ -177,7 +180,12 @@ UsbCan2EU::Status_t UsbCan2EU::CloseChannel(Channel_t channel) {
     }
 
     if (this->chn[ch] != nullptr) {
-        ZCAN_ResetCAN(this->chn[ch]);
+
+
+        if(ZCAN_ResetCAN(this->chn[ch]) == 0)
+        {
+            return Status_t::ERR;
+        }
         this->chn[ch] = nullptr;
     }
 

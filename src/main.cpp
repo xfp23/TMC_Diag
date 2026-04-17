@@ -1,4 +1,4 @@
-#include "Global.h"
+#include "SlintWindow.h"
 
 int main() {
     SlintWindow *MainWindow = new SlintWindow();
