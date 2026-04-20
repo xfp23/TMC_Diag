@@ -19,11 +19,11 @@ namespace Logic
 
     typedef struct 
     {
-        uint32_t recv_id; // 要接收的id
-        uint8_t data[256]; // 要接收的databuffer
-        size_t len; // 要接收的字节长度
-        bool complete;
-        bool en; // 接收使能
+        volatile uint32_t recv_id; // 要接收的id
+        volatile uint8_t data[256]; // 要接收的databuffer
+        volatile size_t len; // 要接收的字节长度
+        volatile bool complete;
+        volatile bool en; // 接收使能
         uint16_t received_size;
     }RecevBuck_t;
 

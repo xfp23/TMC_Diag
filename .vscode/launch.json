@@ -32,6 +32,11 @@
                     "description": "Set Disassembly Flavor to Intel",
                     "text": "-gdb-set disassembly-flavor intel",
                     "ignoreFailures": true
+                },
+                {
+                    "description": "默认显示16进制",
+                    "text": "-gdb-set output-format hex",
+                    "ignoreFailures": true
                 }
             ],
             "preLaunchTask": "C/C++: g++.exe build active file"

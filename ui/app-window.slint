@@ -7,226 +7,222 @@ export component AppWindow inherits Window {
     background: #f5f5f5;
     icon: @image-url("favicon.ico");
 
-    // --- 数据模型 (WPF 的 DataContext/Binding) ---
+    // --- 数据模型 ---
     in-out property <int> diag-status: 0;
     in property <string> test-status: "等待测试";
     property <color> status-color: 
         diag-status == 1 ? #FFA500 : // 橙黄色 (Orange)
-        diag-status == 2 ? #00FF00 : // 绿色 (Green)
+        diag-status == 2 ? #0b700b : // 绿色 (Green)
         diag-status == 3 ? #FF0000 : // 红色 (Red)
         #808080;                     // 默认灰色 (Gray)
 
-    // in property <bool> is-connected: false;
     in property <bool> OpenDevBtnEnable: true;
     in property <bool> CloseDevBtnEnable: false;
     in property <bool> StartDiagBtnEnable: false;
 
-    // 打开设备出错
-    // in property <bool> : false;
     in-out property <bool> OpenDevError: false;
-    // 步骤指示灯颜色 (Gray, Green, Red 等)
 
     in-out property <int> step-one-status :0;
     in-out property <int> step-two-status :0;
     in-out property <int> step-three-status :0;
     in-out property <int> step-four-status :0;
 
-     property <color> step1-color:
+    property <color> step1-color:
         step-one-status == 1 ? #00FF00 : // 绿色 (Green)
         step-one-status == 2 ? #FF0000 : // 红色 (Red)
         #808080;                     // 默认灰色 (Gray)
-     property <color> step2-color:
-            step-two-status == 1 ? #00FF00 : // 绿色 (Green)
+    property <color> step2-color:
+        step-two-status == 1 ? #00FF00 : // 绿色 (Green)
         step-two-status == 2 ? #FF0000 : // 红色 (Red)
         #808080;                     // 默认灰色 (Gray);
-     property <color> step3-color: 
-                 step-three-status == 1 ? #00FF00 : // 绿色 (Green)
+    property <color> step3-color: 
+        step-three-status == 1 ? #00FF00 : // 绿色 (Green)
         step-three-status == 2 ? #FF0000 : // 红色 (Red)
         #808080;                     // 默认灰色 (Gray);;
-
-     property <color> step4-color: 
-                 step-four-status == 1 ? #00FF00 : // 绿色 (Green)
+    property <color> step4-color: 
+        step-four-status == 1 ? #00FF00 : // 绿色 (Green)
         step-four-status == 2 ? #FF0000 : // 红色 (Red)
         #808080;                     // 默认灰色 (Gray);;
 
     in-out property <int> selected-can-channel: 0;
     in-out property <int> selected-can-baud: 0;
 
-    // --- 回调函数 (WPF 的 Event Handler) ---
+    // --- 回调函数 ---
     callback connect-clicked();
     callback disconnect-clicked();
     callback start-test-clicked();
 
-    VerticalBox {
+    // --- 焦点转发：实现热键的关键 ---
+    forward-focus: main-handler;
 
-        // Image {
-        //     source: @image-url(".favicon.ico");
-        //     width: 32px;
-        //     height: 32px;
-        //     // image-fit: contain; // 保持比例缩放
-        // }
-        padding: 20px;
-        spacing: 15px;
-
-        // 1. 设备连接配置 (类似 WPF 的 GroupBox + UniformGrid)
-        Text { text: "设备连接配置"; font-size: 16px; font-weight: 700; }
-        
-        GridLayout {
-            spacing: 10px;
-            Row {
-                VerticalBox { 
-                    padding: 0; Text { text: "设备型号:"; }
-                    ComboBox { model: [/*"USBCANFD-100U", "USBCANFD-200U", */"USBCAN-2E-U"]; current-index: 0; }
+    main-handler := FocusScope {
+        // 键盘事件处理
+        key-pressed(event) => {
+            if (event.text == Key.Return) {
+                if (root.OpenDevError) {
+                    root.OpenDevError = false; // 弹窗显示时回车关闭弹窗
+                    return accept;
                 }
-                VerticalBox { 
-                    padding: 0; Text { text: "CAN通道:"; }
-                    ComboBox { model: ["通道 1", "通道 2"]; current-index <=> root.selected-can-channel; }
+                if (root.StartDiagBtnEnable) {
+                    root.start-test-clicked(); // 正常状态回车开始测试
+                    return accept;
                 }
             }
-            Row {
-                VerticalBox { 
-                    padding: 0; Text { text: "仲裁波特率:"; }
-                    ComboBox { model: ["500K", "250K"]; current-index <=> root.selected-can-baud;}
-                }
-                VerticalBox { 
-                    padding: 0; alignment: center;
-                    CheckBox { text: "启用 120Ω"; checked: false; }
-                }
-            }
+            return reject;
         }
 
-        // 2. 连接按钮 (UniformGrid)
-        HorizontalBox {
-            spacing: 10px;
-            Button { 
-                text: "打开设备"; height: 35px;
-                enabled: root.OpenDevBtnEnable;
-                clicked => { root.connect-clicked() }
-            }
-            Button { 
-                text: "关闭设备"; height: 35px;
-                enabled: root.CloseDevBtnEnable;
-                clicked => { root.disconnect-clicked() }
-            }
-        }
-
-        // 3. 状态条 (WPF 的 Border + TextBlock)
-        Rectangle {
-            height: 50px;
-            background: root.status-color;
-            border-radius: 5px;
-            Text {
-                text: root.test-status;
-                color: white;
-                font-size: 20px;
-                font-weight: 700;
-            }
-        }
-
-        Rectangle { height: 1px; background: #DDD; } // Separator
-
-        // 4. 测试任务列表
-        Text { text: "测试任务列表"; font-size: 16px; font-weight: 700; }
-
-        // 步骤封装组件 (类似 WPF 的 DataTemplate)
+        // 原有 UI 布局开始
         VerticalBox {
-            padding: 0; spacing: 5px;
+            padding: 20px;
+            spacing: 15px;
+
+            // 1. 设备连接配置
+            Text { text: "设备连接配置"; font-size: 16px; font-weight: 700; }
             
-            // 步骤 1
-            Rectangle {
-                border-width: 1px; border-color: #DDD; border-radius: 5px; background: white;
-                HorizontalBox {
-                    Text { text: "步骤 1: 安全解锁 (Seed-Key)"; vertical-alignment: center; }
-                    Rectangle { width: 15px; height: 15px; border-radius: 7.5px; background: root.step1-color; }
-                }
-            }
-            // 步骤 2
-            Rectangle {
-                border-width: 1px; border-color: #DDD; border-radius: 5px; background: white;
-                HorizontalBox {
-                    Text { text: "步骤 2 & 3: 写入 F1C1 数据"; vertical-alignment: center; }
-                    Rectangle { width: 15px; height: 15px; border-radius: 7.5px; background: root.step2-color; }
-                }
-            }
-            // 步骤 3\4
-            Rectangle {
-                border-width: 1px; border-color: #DDD; border-radius: 5px; background: white;
-                HorizontalBox {
-                    Text { text: "步骤 4: 读取并校验 F1C1"; vertical-alignment: center; }
-                    Rectangle { width: 15px; height: 15px; border-radius: 7.5px; background: root.step3-color; }
-                }
-            }
-
-            // 步骤5
-            Rectangle {
-                border-width: 1px; border-color: #DDD; border-radius: 5px; background: white;
-                HorizontalBox {
-                    Text { text: "步骤 5: 读取F180数据"; vertical-alignment: center; }
-                    Rectangle { width: 15px; height: 15px; border-radius: 7.5px; background: root.step3-color; }
-                }
-            }
-            
-        }
-
-        // 5. 开始按钮
-        Button {
-            text: "开始自动测试";
-            height: 45px;
-            enabled: root.StartDiagBtnEnable;
-            // 这种写法直接在 UI 逻辑里控制样式 (WPF 需要写 Trigger)
-            // background: self.enabled ? #007ACC : #808080;
-            primary: true;
-            clicked => { root.start-test-clicked() }
-        }
-
-        // 6. 日志 (WPF 的 TextBox)
-        Text { text: "实时日志:"; font-weight: 700; }
-        TextEdit {
-            font-family: "Consolas";
-            font-size: 11px;
-            // background: #F4F4F4;
-            read-only: true;
-            // text: "..." 这里由 C++ 绑定
-        }
-    }
-if (root.OpenDevError) : Rectangle {
-    // 遮罩层
-    background: #00000080;
-    horizontal-stretch: 1;
-    vertical-stretch: 1;
-
-    // 用布局来做居中（关键！！）
-    HorizontalBox {
-        alignment: center;
-
-        VerticalBox {
-            alignment: center;
-
-            // 弹窗主体
-            Rectangle {
-                width: 300px;
-                height: 150px;
-                background: white;
-                border-radius: 8px;
-                border-width: 1px;
-                border-color: #ccc;
-
-                VerticalBox {
-                    padding: 15px;
-                    spacing: 10px;
-                    alignment: center;
-
-                    Text {
-                        text: "打开设备失败";
-                        color: red;
-                        font-size: 16px;
-                        horizontal-alignment: center;
+            GridLayout {
+                spacing: 10px;
+                Row {
+                    VerticalBox { 
+                        padding: 0; Text { text: "设备型号:"; }
+                        ComboBox { model: ["USBCAN-2E-U"]; current-index: 0; }
                     }
+                    VerticalBox { 
+                        padding: 0; Text { text: "CAN通道:"; }
+                        ComboBox { model: ["通道 1", "通道 2"]; current-index <=> root.selected-can-channel; }
+                    }
+                }
+                Row {
+                    VerticalBox { 
+                        padding: 0; Text { text: "仲裁波特率:"; }
+                        ComboBox { model: ["500K", "250K"]; current-index <=> root.selected-can-baud;}
+                    }
+                    VerticalBox { 
+                        padding: 0; alignment: center;
+                        CheckBox { text: "启用 120Ω"; checked: false; }
+                    }
+                }
+            }
 
-                    Button {
-                        text: "确定";
-                        clicked => {
-                            root.OpenDevError = false;
+            // 2. 连接按钮
+            HorizontalBox {
+                spacing: 10px;
+                Button { 
+                    text: "打开设备"; height: 35px;
+                    enabled: root.OpenDevBtnEnable;
+                    clicked => { root.connect-clicked() }
+                }
+                Button { 
+                    text: "关闭设备"; height: 35px;
+                    enabled: root.CloseDevBtnEnable;
+                    clicked => { root.disconnect-clicked() }
+                }
+            }
+
+            // 3. 状态条
+            Rectangle {
+                height: 50px;
+                background: root.status-color;
+                border-radius: 5px;
+                Text {
+                    text: root.test-status;
+                    color: white;
+                    font-size: 20px;
+                    font-weight: 700;
+                }
+            }
+
+            Rectangle { height: 1px; background: #DDD; }
+
+            // 4. 测试任务列表
+            Text { text: "测试任务列表"; font-size: 16px; font-weight: 700; }
+
+            VerticalBox {
+                padding: 0; spacing: 5px;
+                
+                Rectangle {
+                    border-width: 1px; border-color: #DDD; border-radius: 5px; background: white;
+                    HorizontalBox {
+                        Text { text: "步骤 1: 安全解锁 (Seed-Key)"; vertical-alignment: center; }
+                        Rectangle { width: 15px; height: 15px; border-radius: 7.5px; background: root.step1-color; }
+                    }
+                }
+                Rectangle {
+                    border-width: 1px; border-color: #DDD; border-radius: 5px; background: white;
+                    HorizontalBox {
+                        Text { text: "步骤 2 & 3: 写入 F1C1 数据"; vertical-alignment: center; }
+                        Rectangle { width: 15px; height: 15px; border-radius: 7.5px; background: root.step2-color; }
+                    }
+                }
+                Rectangle {
+                    border-width: 1px; border-color: #DDD; border-radius: 5px; background: white;
+                    HorizontalBox {
+                        Text { text: "步骤 4: 读取并校验 F1C1"; vertical-alignment: center; }
+                        Rectangle { width: 15px; height: 15px; border-radius: 7.5px; background: root.step3-color; }
+                    }
+                }
+                Rectangle {
+                    border-width: 1px; border-color: #DDD; border-radius: 5px; background: white;
+                    HorizontalBox {
+                        Text { text: "步骤 5: 读取F180数据"; vertical-alignment: center; }
+                        Rectangle { width: 15px; height: 15px; border-radius: 7.5px; background: root.step3-color; }
+                    }
+                }
+            }
+
+            // 5. 开始按钮
+            Button {
+                text: "开始自动测试";
+                height: 45px;
+                enabled: root.StartDiagBtnEnable;
+                primary: true;
+                clicked => { root.start-test-clicked() }
+            }
+
+            // 6. 日志
+            Text { text: "实时日志:"; font-weight: 700; }
+            TextEdit {
+                font-family: "Consolas";
+                font-size: 11px;
+                read-only: true;
+            }
+        }
+
+        // 弹窗逻辑 (放在主容器内，确保层级正确)
+        if (root.OpenDevError) : Rectangle {
+            background: #00000080;
+            horizontal-stretch: 1;
+            vertical-stretch: 1;
+
+            HorizontalBox {
+                alignment: center;
+                VerticalBox {
+                    alignment: center;
+                    Rectangle {
+                        width: 300px;
+                        height: 150px;
+                        background: white;
+                        border-radius: 8px;
+                        border-width: 1px;
+                        border-color: #ccc;
+
+                        VerticalBox {
+                            padding: 15px;
+                            spacing: 10px;
+                            alignment: center;
+
+                            Text {
+                                text: "打开设备失败";
+                                color: red;
+                                font-size: 16px;
+                                horizontal-alignment: center;
+                            }
+
+                            Button {
+                                text: "确定";
+                                clicked => {
+                                    root.OpenDevError = false;
+                                }
+                            }
                         }
                     }
                 }
@@ -234,6 +230,3 @@ if (root.OpenDevError) : Rectangle {
         }
     }
 }
-
-}
-

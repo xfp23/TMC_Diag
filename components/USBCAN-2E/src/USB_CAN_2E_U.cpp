@@ -88,41 +88,48 @@ UsbCan2EU::Status_t UsbCan2EU::OpenChannel(Channel_t channel,BaudRate_t baud)
     return Status_t::OK;
 }
 
-// void UsbCan2EU::thread_task(CHANNEL_HANDLE chn, int chn_idx) 
-// {
-//     ZCAN_Receive_Data canData[100];
+void UsbCan2EU::thread_task(CHANNEL_HANDLE chn, int chn_idx) 
+{
+    ZCAN_Receive_Data canData[100];
     
-//     while (this->g_thd_run[chn_idx]) 
-//     {
-//         uint32_t num = ZCAN_GetReceiveNum(chn, 0);
-//         if (num > 0) 
-//         {
-//             uint32_t ReceiveNum = ZCAN_Receive(chn, canData, 100, 50);
-//             if (ReceiveNum > 0 && this->recv_callback != nullptr) 
-//             {
+    while (this->g_thd_run[chn_idx]) 
+    {
+        uint32_t num = ZCAN_GetReceiveNum(chn, 0);
+        if (num > 0) 
+        {
+            uint32_t ReceiveNum = ZCAN_Receive(chn, canData, 100, 50);
+            if (ReceiveNum > 0 && this->recv_callback != nullptr) 
+            {
                 
-//                 ChannelCanData_t localData; 
-//                 localData.recv_num = ReceiveNum;
-//                 localData.info.resize(ReceiveNum);
+                ChannelCanData_t localData; 
+                localData.recv_num = ReceiveNum;
+                localData.info.resize(ReceiveNum);
 
-//                 for (uint32_t i = 0; i < ReceiveNum; i++) {
-//                     localData.info[i].ch = (Channel_t)chn_idx;
-//                     localData.info[i].id = GET_ID(canData[i].frame.can_id);
-//                     localData.info[i].dlc = canData[i].frame.can_dlc;
-//                     memcpy(localData.info[i].data, canData[i].frame.data, 8);
-//                 }
+                for (uint32_t i = 0; i < ReceiveNum; i++) {
+                    localData.info[i].ch = (Channel_t)chn_idx;
+                    localData.info[i].id = GET_ID(canData[i].frame.can_id);
+                    localData.info[i].dlc = canData[i].frame.can_dlc;
+                    memcpy(localData.info[i].data, canData[i].frame.data, 8);
 
-//                 if(this->recv_callback != nullptr)
-//                 {
-//                 this->recv_callback(localData);
-//                 }
+                    // if(localData.info[i].id == 0x18DAF119)
+                    // {
+                    //     printf("res");
+                    // }
+                }
 
-//             }
-//         }
-//     if (num == 0)
-//     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-//     }
-// }
+                if(this->recv_callback != nullptr)
+                {
+                this->recv_callback(localData);
+                }
+
+
+
+            }
+        }
+    if (num == 0)
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    }
+}
 
 /**
  * @brief 新的接收方案
@@ -130,35 +137,35 @@ UsbCan2EU::Status_t UsbCan2EU::OpenChannel(Channel_t channel,BaudRate_t baud)
  * @param chn 
  * @param chn_idx 
  */
-void UsbCan2EU::thread_task(CHANNEL_HANDLE chn, int chn_idx) 
-{
-    ZCAN_Receive_Data canData[100];
+// void UsbCan2EU::thread_task(CHANNEL_HANDLE chn, int chn_idx) 
+// {
+//     ZCAN_Receive_Data canData[100];
 
-    while (this->g_thd_run[chn_idx]) 
-    {
-        uint32_t ReceiveNum = ZCAN_Receive(chn, canData, 100, 10);
+//     while (this->g_thd_run[chn_idx]) 
+//     {
+//         uint32_t ReceiveNum = ZCAN_Receive(chn, canData, 100, 10);
 
-        if (ReceiveNum > 0 && this->recv_callback)
-        {
-            ChannelCanData_t localData;
-            localData.recv_num = ReceiveNum;
-            localData.info.resize(ReceiveNum);
+//         if (ReceiveNum > 0 && this->recv_callback)
+//         {
+//             ChannelCanData_t localData;
+//             localData.recv_num = ReceiveNum;
+//             localData.info.resize(ReceiveNum);
 
-            for (uint32_t i = 0; i < ReceiveNum; i++) {
-                localData.info[i].ch = (Channel_t)chn_idx;
-                localData.info[i].id = GET_ID(canData[i].frame.can_id);
-                localData.info[i].dlc = canData[i].frame.can_dlc;
-                memcpy(localData.info[i].data, canData[i].frame.data, 8);
-            }
+//             for (uint32_t i = 0; i < ReceiveNum; i++) {
+//                 localData.info[i].ch = (Channel_t)chn_idx;
+//                 localData.info[i].id = GET_ID(canData[i].frame.can_id);
+//                 localData.info[i].dlc = canData[i].frame.can_dlc;
+//                 memcpy(localData.info[i].data, canData[i].frame.data, 8);
+//             }
 
-            if(this->recv_callback != nullptr)
-            {
-            this->recv_callback(localData);
-            }
+//             if(this->recv_callback != nullptr)
+//             {
+//             this->recv_callback(localData);
+//             }
 
-        }
-    }
-}
+//         }
+//     }
+// }
 
 
 void UsbCan2EU::RegisterTransmitCallback(Callback_Func_t func)
@@ -185,12 +192,12 @@ UsbCan2EU::Status_t UsbCan2EU::Transmit(Channel_t ch, uint32_t id,uint8_t *data,
 
     ZCAN_Transmit_Data canData = {};
     memset(&canData, 0, sizeof(canData));
-    canData.frame.can_id = MAKE_CAN_ID(id,0,0,0);
+    canData.frame.can_id = MAKE_CAN_ID(id,1,0,0);
     canData.frame.can_dlc = 8;
-    canData.transmit_type = 0;
+    canData.transmit_type = 1; // 1 失败不重发 0 失败重发
 
     memcpy((void*)canData.frame.data,data,8);
-    ZCAN_Transmit(this->chn[(int)ch],&canData,1);
+    unsigned int ret = ZCAN_Transmit(this->chn[(int)ch],&canData,1);
 
     return Status_t::OK;
 }

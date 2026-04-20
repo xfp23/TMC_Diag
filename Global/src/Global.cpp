@@ -70,13 +70,13 @@ namespace Logic
             return false;
 
         // --- 1. 初始化接收桶 ---
-        memset(this->buck.data, 0, sizeof(this->buck.data));
+        memset((void*)this->buck.data, 0, sizeof(this->buck.data));
         this->buck.len = len;
         this->buck.received_size = 0;
         this->buck.recv_id = id;
         this->buck.complete = false;
         this->buck.en = true;
-
+        std::atomic_thread_fence(std::memory_order_release);
         bool success = false;
 
         // --- 2. 使用真实时间 ---
@@ -104,7 +104,7 @@ namespace Logic
 
         if (this->buck.complete)
         {
-            memcpy(data, this->buck.data, len);
+            memcpy(data, (void*)this->buck.data, len);
         }
         else
         {
@@ -233,7 +233,7 @@ namespace Logic
         uint8_t resff[8] = {};
         uint8_t fc[8] = {0x30, 0x00, 0x00, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
         CHECK_BOOL(this->Transmit(this->DevPhySicalId, req, 8));
-        CHECK_BOOL(this->Can_Receive(this->DevResponseId, resff, 24, 2000)); // 接收到首帧
+        CHECK_BOOL(this->Can_Receive(this->DevResponseId, resff, 8, 2000)); // 接收到首帧
         CHECK_BOOL((resff[0] & 0xF0) == 0x10);                               // 检查是否是首帧
         // 发送流控
         CHECK_BOOL(this->Transmit(this->DevPhySicalId, fc, 8));
@@ -278,8 +278,8 @@ namespace Logic
         uint8_t resCF[16] = {};
         uint8_t reqFC[8] = {0x30, 0x00, 0x14, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA}; // 流控
         CHECK_BOOL(this->Transmit(this->DevPhySicalId, reqFC, 8));
-        CHECK_BOOL(this->Can_Receive(this->DevResponseId, resCF, 16, 2000));
-        CHECK_BOOL(resCF[8] == 0x4C && resCF[9] == 0x78 && resCF[10] == 0x5F && resCF[11] == 0x03 && resCF[12] == 0x02);
+        CHECK_BOOL(this->Can_Receive(this->DevResponseId, resCF, 16, 2000)); // 收16个字节
+        CHECK_BOOL(resCF[9] == 0x4C && resCF[10] == 0x78 && resCF[11] == 0x5F && resCF[12] == 0x03 && resCF[13] == 0x02);
 
         // 切换回默认会话
         uint8_t reqDefaultSess[8] = {0x02, 0x10, 0x01, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
@@ -345,6 +345,16 @@ namespace Logic
             return;
         }
 
+        // if(!this->buck.en == false)
+        // {
+        //     return;
+        // }
+
+        // if(id != this->buck.recv_id)
+        // {
+        //     return;
+        // }
+
         if (this->buck.received_size + len > this->buck.len)
         {
             len = this->buck.len - this->buck.received_size;
@@ -352,7 +362,7 @@ namespace Logic
                 return;
         }
 
-        memcpy(this->buck.data + this->buck.received_size, data, len);
+        memcpy((void*)(this->buck.data + this->buck.received_size), data, len);
 
         this->buck.received_size += len;
 

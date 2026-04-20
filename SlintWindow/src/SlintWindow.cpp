@@ -15,7 +15,8 @@ SlintWindow::SlintWindow() : ui_(AppWindow::create())
         [this](uint32_t id, uint8_t *data, uint16_t len)
         {
             return this->usb_can->Transmit(
-                       static_cast<UsbCan2EU::Channel_t>(this->ch),
+                    //    static_cast<UsbCan2EU::Channel_t>(this->ch),
+                        UsbCan2EU::Channel_t::CH0,
                        id,
                        data,
                        len) == UsbCan2EU::Status_t::OK;
@@ -67,12 +68,13 @@ void SlintWindow::BtnClick_ConnectDevice()
     
     int ch = ui_->get_selected_can_channel();
     int baud = ui_->get_selected_can_baud();
-    if (usb_can->OpenChannel((UsbCan2EU::Channel_t)ch, (UsbCan2EU::BaudRate_t)baud) != UsbCan2EU::Status_t::OK)
-    {
-        this->ui_->set_OpenDevError(true);
-        return;
-    }
-
+    // if (usb_can->OpenChannel((UsbCan2EU::Channel_t)ch, (UsbCan2EU::BaudRate_t)baud) != UsbCan2EU::Status_t::OK)
+    // {
+    //     this->ui_->set_OpenDevError(true);
+    //     return;
+    // }
+    usb_can->OpenChannel(UsbCan2EU::Channel_t::CH0, UsbCan2EU::BaudRate_t::Baud_500K);
+    usb_can->OpenChannel(UsbCan2EU::Channel_t::CH1, UsbCan2EU::BaudRate_t::Baud_500K);
     this->ui_->set_OpenDevBtnEnable(false);
     this->ui_->set_CloseDevBtnEnable(true);
     this->ui_->set_StartDiagBtnEnable(true);
@@ -80,8 +82,10 @@ void SlintWindow::BtnClick_ConnectDevice()
 
 void SlintWindow::BtnClick_DisConnectDevice()
 {
+    // usb_can->CloseDev();
     this->ch = ui_->get_selected_can_channel();
-    usb_can->CloseChannel((UsbCan2EU::Channel_t)ch);
+    usb_can->CloseChannel(UsbCan2EU::Channel_t::CH0);
+    usb_can->CloseChannel(UsbCan2EU::Channel_t::CH1);
     this->ui_->set_OpenDevBtnEnable(true);
     this->ui_->set_CloseDevBtnEnable(false);
     this->ui_->set_StartDiagBtnEnable(false);
