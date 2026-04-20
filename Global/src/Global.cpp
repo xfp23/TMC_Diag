@@ -279,7 +279,7 @@ namespace Logic
         uint8_t reqFC[8] = {0x30, 0x00, 0x14, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA}; // 流控
         CHECK_BOOL(this->Transmit(this->DevPhySicalId, reqFC, 8));
         CHECK_BOOL(this->Can_Receive(this->DevResponseId, resCF, 16, 2000)); // 收16个字节
-        CHECK_BOOL(resCF[9] == 0x4C && resCF[10] == 0x78 && resCF[11] == 0x5F && resCF[12] == 0x03 && resCF[13] == 0x02);
+        CHECK_BOOL(resCF[9] == 0x4C && resCF[10] == 0x78 && resCF[11] == 0x5F && resCF[12] == 0x03 && resCF[13] == 0x02); // 0x02
 
         // 切换回默认会话
         uint8_t reqDefaultSess[8] = {0x02, 0x10, 0x01, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
