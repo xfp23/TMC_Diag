@@ -14,9 +14,25 @@ SlintWindow::SlintWindow() : ui_(AppWindow::create())
     Gl->Can_RegisterCanTrans(
         [this](uint32_t id, uint8_t *data, uint16_t len)
         {
+            std::stringstream ss;
+
+            ss << "TX ID : 0x" << std::hex << std::uppercase << id << " DATA: [";
+
+            for(int i = 0; i < len; i++)
+            {
+                ss << std::setfill('0') << std::setw(2) << std::hex << (int)data[i] << " ";
+            }
+
+            ss << ']';
+            
+            this->append_log(ss.str());
+            if(this->log->isOpen())
+            {
+                this->log->writeLog(ss.str());
+            }
             return this->usb_can->Transmit(
-                    //    static_cast<UsbCan2EU::Channel_t>(this->ch),
-                        UsbCan2EU::Channel_t::CH0,
+                       static_cast<UsbCan2EU::Channel_t>(this->ch),
+                        // UsbCan2EU::Channel_t::CH0,
                        id,
                        data,
                        len) == UsbCan2EU::Status_t::OK;
@@ -68,6 +84,7 @@ void SlintWindow::BtnClick_ConnectDevice()
     
     int ch = ui_->get_selected_can_channel();
     int baud = ui_->get_selected_can_baud();
+    this->ch = ch;
     // if (usb_can->OpenChannel((UsbCan2EU::Channel_t)ch, (UsbCan2EU::BaudRate_t)baud) != UsbCan2EU::Status_t::OK)
     // {
     //     this->ui_->set_OpenDevError(true);
@@ -187,6 +204,7 @@ void SlintWindow::BtnClick_StartDiag()
     this->ui_->set_step_two_status(0);
     this->ui_->set_step_three_status(0);
     this->ui_->set_step_four_status(0);
+    this->ui_->set_log_content("");
 
     // 2. 开启后台业务线程
     std::thread([this]()
@@ -261,13 +279,49 @@ void SlintWindow::WindowClick_Close()
 
 void SlintWindow::CanReceiveLoop(UsbCan2EU::ChannelCanData_t data)
 {
-    for (const auto& frame : data.info)
+    for (const auto &frame : data.info)
     {
-        this->Gl->Can_ReviveCallback(frame.id, (uint8_t*)frame.data, frame.dlc);
+        this->Gl->Can_ReviveCallback(frame.id, (uint8_t *)frame.data, frame.dlc);
 
-        if (this->log->isOpen())
+        // if (this->log->isOpen())
+        // {
+        //     this->log->writeCanLog(frame.id, frame.data, frame.dlc);
+        // }
+
+        if (frame.id == 0x18DAF119)
         {
-            this->log->writeCanLog(frame.id, frame.data, frame.dlc);
+            std::stringstream ss;
+
+            ss << "RX ID : 0x" << std::hex << std::uppercase << frame.id << "   DATA: [";
+
+            for (int i = 0; i < frame.dlc; i++)
+            {
+                ss << std::setfill('0') << std::setw(2) << std::hex << (int)frame.data[i] << " ";
+            }
+
+            ss << ']';
+
+            this->append_log(ss.str());
+            if (this->log->isOpen())
+            {
+                this->log->writeLog(ss.str());
+            }
         }
     }
+}
+
+void SlintWindow::append_log(std::string message)
+{
+    auto now = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
+    char buf[20];
+    std::strftime(buf, sizeof(buf), "%H:%M:%S", std::localtime(&now));
+
+    std::string formatted_msg = "[" + std::string(buf) + "] " + message + "\n";
+
+    // 切换到 UI 线程更新
+    slint::invoke_from_event_loop([this, formatted_msg]()
+                                  {
+        // 先获取旧内容，再追加新内容
+        auto old_text = this->ui_->get_log_content();
+        this->ui_->set_log_content(old_text + slint::SharedString(formatted_msg)); });
 }

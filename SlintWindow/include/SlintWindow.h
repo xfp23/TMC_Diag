@@ -27,6 +27,8 @@ private:
 
     void WindowClick_Close();
 
+    void append_log(std::string message);
+
     void BindEvents();
     void BtnClick_ConnectDevice();
     void BtnClick_DisConnectDevice();

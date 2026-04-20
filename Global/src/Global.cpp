@@ -45,7 +45,7 @@ namespace Logic
             return false;
         }
 
-        this->delay(2);
+        this->delay(1000);
 
         return true;
     }
@@ -59,7 +59,7 @@ namespace Logic
             return false;
         }
 
-        this->delay(2);
+        this->delay(1000);
 
         return true;
     }
@@ -183,7 +183,7 @@ namespace Logic
     bool Global::Step2_WriteF1C1()
     {
 
-        this->delay(5);
+        this->delay(10);
 
         uint8_t resp[8] = {};
         // 多帧请求
@@ -284,6 +284,7 @@ namespace Logic
         // 切换回默认会话
         uint8_t reqDefaultSess[8] = {0x02, 0x10, 0x01, 0xAA, 0xAA, 0xAA, 0xAA, 0xAA};
         this->Transmit(this->DevPhySicalId, reqDefaultSess, 8); // 这个应该不算失败，就算没回去也不影响,不做bool检查
+        this->delay(100);
 
         return true;
     }

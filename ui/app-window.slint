@@ -26,6 +26,7 @@ export component AppWindow inherits Window {
     in-out property <int> step-two-status :0;
     in-out property <int> step-three-status :0;
     in-out property <int> step-four-status :0;
+    in-out property <string> log-content : "启动\n";
 
     property <color> step1-color:
         step-one-status == 1 ? #00FF00 : // 绿色 (Green)
@@ -179,11 +180,13 @@ export component AppWindow inherits Window {
             }
 
             // 6. 日志
+            
             Text { text: "实时日志:"; font-weight: 700; }
             TextEdit {
                 font-family: "Consolas";
                 font-size: 11px;
                 read-only: true;
+                text: log-content;
             }
         }
 
