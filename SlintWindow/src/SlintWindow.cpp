@@ -292,7 +292,7 @@ void SlintWindow::CanReceiveLoop(UsbCan2EU::ChannelCanData_t data)
         {
             std::stringstream ss;
 
-            ss << "RX ID : 0x" << std::hex << std::uppercase << frame.id << "   DATA: [";
+            ss << "RX ID : 0x" << std::hex << std::uppercase << frame.id << " DATA: [";
 
             for (int i = 0; i < frame.dlc; i++)
             {
